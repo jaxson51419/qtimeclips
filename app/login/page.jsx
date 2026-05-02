@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,14 +11,16 @@ export default function LoginPage() {
   const handleAuth = async () => {
     setLoading(true);
     setMessage("");
+    const { supabase } = await import("../../lib/supabase");
+    if (!supabase) { setMessage("Error: Not configured"); setLoading(false); return; }
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) setMessage("Error: " + error.message);
-      else setMessage("✅ Account created! Check your email to confirm.");
+      else setMessage("Account created! Check your email.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMessage("Error: " + error.message);
-      else setMessage("✅ Logged in successfully!");
+      else setMessage("Logged in successfully!");
     }
     setLoading(false);
   };
@@ -31,7 +32,7 @@ export default function LoginPage() {
       <div style={{ fontSize: 16, color: "rgba(255,255,255,0.5)" }}>{isSignUp ? "Create your account" : "Welcome back"}</div>
       <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: 300, padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 14 }} />
       <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={{ width: 300, padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 14 }} />
-      {message && <div style={{ color: message.startsWith("✅") ? "#55EFC4" : "#FF6B6B", fontSize: 13, textAlign: "center", maxWidth: 300 }}>{message}</div>}
+      {message && <div style={{ color: message.startsWith("Error") ? "#FF6B6B" : "#55EFC4", fontSize: 13, textAlign: "center", maxWidth: 300 }}>{message}</div>}
       <button onClick={handleAuth} disabled={loading} style={{ width: 300, background: "linear-gradient(135deg, #FF6B6B, #A29BFE)", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
         {loading ? "Please wait..." : isSignUp ? "Create Account" : "Log In"}
       </button>
