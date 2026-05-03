@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -7,6 +8,7 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleAuth = async () => {
     setLoading(true);
@@ -20,7 +22,7 @@ export default function LoginPage() {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMessage("Error: " + error.message);
-      else setMessage("Logged in successfully!");
+      else router.push("/feed");
     }
     setLoading(false);
   };
