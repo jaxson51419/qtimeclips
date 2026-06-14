@@ -10,6 +10,7 @@ export default function FeedPage() {
   const [comments, setComments] = useState({});
   const [newComment, setNewComment] = useState("");
   const [user, setUser] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const TABS = [
     { name: "Feed", icon: "🏠" },
     { name: "Explore", icon: "🔍" },
@@ -56,9 +57,24 @@ export default function FeedPage() {
     setNewComment("");
   };
 
+  const deleteClip = async (clipId) => {
+    if (!confirm("Are you sure you want to delete this clip?")) return;
+    setDeleting(clipId);
+    try {
+      const { supabase } = await import("../../lib/supabase");
+      const { error } = await supabase.storage.from("videos").remove([clipId]);
+      if (!error) {
+        setClips(prev => prev.filter(c => c.id !== clipId));
+      } else {
+        alert("Delete failed: " + error.message);
+      }
+    } catch (e) { console.error(e); }
+    setDeleting(null);
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#0A0A0F", color: "#fff", fontFamily: "'SF Pro Display', -apple-system, sans-serif", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column" }}>
-      <style>{`* { box-sizing: border-box; } ::-webkit-scrollbar { display: none; } @keyframes spin { to { transform: rotate(360deg); } } @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
+      <style>{`* { box-sizing: border-box; } ::-webkit-scrollbar { display: none; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Header */}
       <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(10,10,15,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", position: "sticky", top: 0, zIndex: 100 }}>
@@ -89,7 +105,16 @@ export default function FeedPage() {
             <div key={clip.id} style={{ marginBottom: 24, borderRadius: 24, overflow: "hidden", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
               <div style={{ position: "relative" }}>
                 <video src={clip.url} controls playsInline style={{ width: "100%", maxHeight: 520, objectFit: "cover", background: "#000", display: "block" }}/>
-                <div style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "#FFE66D" }}>90s</div>
+                <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 8 }}>
+                  <div style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "#FFE66D" }}>90s</div>
+                  <button
+                    onClick={() => deleteClip(clip.id)}
+                    disabled={deleting === clip.id}
+                    style={{ background: "rgba(255,50,50,0.7)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "#fff", border: "none", cursor: "pointer" }}
+                  >
+                    {deleting === clip.id ? "..." : "🗑 Delete"}
+                  </button>
+                </div>
               </div>
               <div style={{ padding: "14px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -118,7 +143,6 @@ export default function FeedPage() {
                   <button style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 20, padding: 0 }}>↗️</button>
                 </div>
 
-                {/* Comments section */}
                 {commentOpen === clip.id && (
                   <div style={{ marginTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 12 }}>
                     {(comments[clip.id] || []).length === 0 && (
@@ -137,13 +161,7 @@ export default function FeedPage() {
                       </div>
                     ))}
                     <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                      <input
-                        value={newComment}
-                        onChange={e => setNewComment(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && addComment(clip.id)}
-                        placeholder="Add a comment..."
-                        style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "8px 14px", color: "#fff", fontSize: 13, outline: "none" }}
-                      />
+                      <input value={newComment} onChange={e => setNewComment(e.target.value)} onKeyDown={e => e.key === "Enter" && addComment(clip.id)} placeholder="Add a comment..." style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "8px 14px", color: "#fff", fontSize: 13, outline: "none" }}/>
                       <button onClick={() => addComment(clip.id)} style={{ background: "linear-gradient(135deg, #FF6B6B, #A29BFE)", border: "none", borderRadius: 20, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Post</button>
                     </div>
                   </div>
@@ -154,7 +172,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* Profile Tab */}
       {activeTab === "Profile" && (
         <div style={{ flex: 1, padding: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, paddingTop: 40 }}>
@@ -199,7 +216,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* Bottom Nav */}
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: "rgba(10,10,15,0.97)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-around", padding: "10px 0 20px", zIndex: 200 }}>
         {TABS.map(tab => (
           <button key={tab.name} onClick={() => tab.name === "Upload" ? window.location.href = "/upload" : setActiveTab(tab.name)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, color: activeTab === tab.name ? "#FF6B6B" : "rgba(255,255,255,0.35)", padding: "4px 10px" }}>
