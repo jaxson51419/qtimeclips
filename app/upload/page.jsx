@@ -13,12 +13,9 @@ export default function UploadPage() {
   const handleFileChange = async (e) => {
     const selected = e.target.files[0];
     if (!selected) return;
-    
-    // Check video duration
     const video = document.createElement("video");
     video.src = URL.createObjectURL(selected);
     await new Promise(resolve => video.addEventListener("loadedmetadata", resolve));
-    
     if (video.duration > 300) {
       setError("Video must be 5 minutes or less! Your video is " + Math.round(video.duration) + " seconds.");
       setFile(null);
@@ -36,7 +33,9 @@ export default function UploadPage() {
     setError("");
     setProgress(0);
 
-    const filename = `${Date.now()}_${title.trim().replace(/\s+/g, "-")}_${file.name}`;
+    const cleanTitle = title.trim().replace(/[^a-zA-Z0-9]/g, "-");
+    const fileExt = file.name.split(".").pop();
+    const filename = `${Date.now()}_${cleanTitle}.${fileExt}`;
 
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -63,7 +62,6 @@ export default function UploadPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0A0A0F", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, gap: 20, textAlign: "center", fontFamily: "sans-serif" }}>
-      
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, padding: "16px 20px", display: "flex", alignItems: "center", gap: 8, background: "rgba(10,10,15,0.95)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <a href="/feed" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none", fontSize: 14 }}>← Back</a>
         <span style={{ fontSize: 16, fontWeight: 800, marginLeft: 8 }}>QTime<span style={{ color: "#FF6B6B" }}>Clips</span></span>
@@ -73,27 +71,11 @@ export default function UploadPage() {
       <div style={{ fontSize: 24, fontWeight: 800 }}>Upload Your Clip</div>
       <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Max 5 minutes. Make it count.</div>
 
-      <input
-        type="text"
-        placeholder="Add a title for your clip..."
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        style={{ width: 300, padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 14, outline: "none" }}
-      />
+      <input type="text" placeholder="Add a title for your clip..." value={title} onChange={e => setTitle(e.target.value)} style={{ width: 300, padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 14, outline: "none" }}/>
 
-      <input
-        type="file"
-        accept="video/*"
-        onChange={handleFileChange}
-        style={{ color: "#fff", fontSize: 14 }}
-      />
+      <input type="file" accept="video/*" onChange={handleFileChange} style={{ color: "#fff", fontSize: 14 }}/>
 
-      {file && !done && (
-        <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
-          Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)
-        </div>
-      )}
-
+      {file && !done && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)</div>}
       {error && <div style={{ color: "#FF6B6B", fontSize: 13, maxWidth: 300 }}>{error}</div>}
 
       {uploading && (
@@ -117,11 +99,7 @@ export default function UploadPage() {
         </div>
       ) : (
         !uploading && (
-          <button
-            onClick={handleUpload}
-            disabled={!file || !title.trim()}
-            style={{ background: file && title.trim() ? "linear-gradient(135deg, #FF6B6B, #A29BFE)" : "rgba(255,255,255,0.1)", borderRadius: 16, padding: "14px 36px", fontSize: 15, fontWeight: 700, cursor: file && title.trim() ? "pointer" : "not-allowed", color: "#fff", border: "none" }}
-          >
+          <button onClick={handleUpload} disabled={!file || !title.trim()} style={{ background: file && title.trim() ? "linear-gradient(135deg, #FF6B6B, #A29BFE)" : "rgba(255,255,255,0.1)", borderRadius: 16, padding: "14px 36px", fontSize: 15, fontWeight: 700, cursor: file && title.trim() ? "pointer" : "not-allowed", color: "#fff", border: "none" }}>
             Upload Video
           </button>
         )
