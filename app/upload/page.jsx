@@ -17,7 +17,7 @@ export default function UploadPage() {
     video.src = URL.createObjectURL(selected);
     await new Promise(resolve => video.addEventListener("loadedmetadata", resolve));
     if (video.duration > 300) {
-      setError("Video must be 5 minutes or less! Your video is " + Math.round(video.duration) + " seconds.");
+      setError("Video must be 5 minutes or less!");
       setFile(null);
       return;
     }
@@ -32,31 +32,19 @@ export default function UploadPage() {
     setUploading(true);
     setError("");
     setProgress(0);
-
     const cleanTitle = title.trim().replace(/[^a-zA-Z0-9]/g, "-");
     const fileExt = file.name.split(".").pop();
     const filename = `${Date.now()}_${cleanTitle}.${fileExt}`;
-
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 90) { clearInterval(progressInterval); return 90; }
         return prev + Math.random() * 10;
       });
     }, 500);
-
-    const { error } = await supabase.storage
-      .from("videos")
-      .upload(filename, file);
-
+    const { error } = await supabase.storage.from("videos").upload(filename, file);
     clearInterval(progressInterval);
-
-    if (error) {
-      setError("Upload failed: " + error.message);
-      setProgress(0);
-    } else {
-      setProgress(100);
-      setDone(true);
-    }
+    if (error) { setError("Upload failed: " + error.message); setProgress(0); }
+    else { setProgress(100); setDone(true); }
     setUploading(false);
   };
 
@@ -66,18 +54,13 @@ export default function UploadPage() {
         <a href="/feed" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none", fontSize: 14 }}>← Back</a>
         <span style={{ fontSize: 16, fontWeight: 800, marginLeft: 8 }}>QTime<span style={{ color: "#FF6B6B" }}>Clips</span></span>
       </div>
-
       <div style={{ fontSize: 64, marginTop: 60 }}>🎬</div>
       <div style={{ fontSize: 24, fontWeight: 800 }}>Upload Your Clip</div>
       <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Max 5 minutes. Make it count.</div>
-
       <input type="text" placeholder="Add a title for your clip..." value={title} onChange={e => setTitle(e.target.value)} style={{ width: 300, padding: "12px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 14, outline: "none" }}/>
-
       <input type="file" accept="video/*" onChange={handleFileChange} style={{ color: "#fff", fontSize: 14 }}/>
-
       {file && !done && <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)</div>}
       {error && <div style={{ color: "#FF6B6B", fontSize: 13, maxWidth: 300 }}>{error}</div>}
-
       {uploading && (
         <div style={{ width: "100%", maxWidth: 300 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
@@ -90,7 +73,6 @@ export default function UploadPage() {
           <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginTop: 8 }}>Please keep this page open</div>
         </div>
       )}
-
       {done ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 48 }}>✅</div>
