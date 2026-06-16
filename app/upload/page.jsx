@@ -10,6 +10,26 @@ export default function UploadPage() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
+  const handleFileChange = async (e) => {
+    const selected = e.target.files[0];
+    if (!selected) return;
+    
+    // Check video duration
+    const video = document.createElement("video");
+    video.src = URL.createObjectURL(selected);
+    await new Promise(resolve => video.addEventListener("loadedmetadata", resolve));
+    
+    if (video.duration > 300) {
+      setError("Video must be 5 minutes or less! Your video is " + Math.round(video.duration) + " seconds.");
+      setFile(null);
+      return;
+    }
+    setError("");
+    setFile(selected);
+    setDone(false);
+    setProgress(0);
+  };
+
   const handleUpload = async () => {
     if (!file || !title.trim()) return;
     setUploading(true);
@@ -51,7 +71,7 @@ export default function UploadPage() {
 
       <div style={{ fontSize: 64, marginTop: 60 }}>🎬</div>
       <div style={{ fontSize: 24, fontWeight: 800 }}>Upload Your Clip</div>
-      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Max 90 seconds. Make it count.</div>
+      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Max 5 minutes. Make it count.</div>
 
       <input
         type="text"
@@ -64,7 +84,7 @@ export default function UploadPage() {
       <input
         type="file"
         accept="video/*"
-        onChange={e => { setFile(e.target.files[0]); setDone(false); setProgress(0); }}
+        onChange={handleFileChange}
         style={{ color: "#fff", fontSize: 14 }}
       />
 
